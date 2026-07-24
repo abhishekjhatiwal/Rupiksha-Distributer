@@ -1,0 +1,3 @@
+- [x] Update `Color.kt` with brighter brand colors
+- [x] Update `Theme.kt` to default to light theme (bright)
+- [x] Verify changes on Login and Registration screens

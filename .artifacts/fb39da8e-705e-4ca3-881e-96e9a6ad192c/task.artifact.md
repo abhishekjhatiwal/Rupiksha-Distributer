@@ -1,0 +1,4 @@
+- `[x]` Update `RegistrationData` in `RegistrationModels.kt` to reorder `permanentAddress`
+- `[x]` Update `RegistrationViewModel.kt` to move validation for `permanentAddress` from Step 3 to Step 2
+- `[x]` Update `RegistrationScreen.kt` to move `permanentAddress` field from `StepKycFinance` to `StepBusiness`
+- `[x]` Verify changes by building the project

@@ -1,0 +1,10 @@
+- [x] Create `OtpResponseDto`
+- [x] Create `OtpApiService`
+- [x] Create `OtpRepository` interface
+- [x] Implement `OtpRepositoryImpl`
+- [x] Create `OtpUseCases` (Send & Verify)
+- [x] Update `RegistrationData` in `RegistrationModels.kt`
+- [x] Update `AppContainer` for DI
+- [x] Update `RegistrationViewModel` (logic, states, countdown)
+- [x] Update `RegistrationScreen` UI (OTP fields, buttons)
+- [x] Verification

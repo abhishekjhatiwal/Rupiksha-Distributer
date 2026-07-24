@@ -1,0 +1,5 @@
+- [x] Modify `DashboardScreen.kt` to use `Image` for logo
+    - [x] Update Top Bar logo
+    - [x] Update FAB logo
+    - [x] Add missing imports
+- [x] Verify changes with `analyze_file`
