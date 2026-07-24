@@ -7,4 +7,5 @@
 - [x] Update `AppContainer` for DI
 - [x] Update `RegistrationViewModel` (logic, states, countdown)
 - [x] Update `RegistrationScreen` UI (OTP fields, buttons)
+- [x] Implement Test Mode (OTP 123456) and fallback UI
 - [x] Verification

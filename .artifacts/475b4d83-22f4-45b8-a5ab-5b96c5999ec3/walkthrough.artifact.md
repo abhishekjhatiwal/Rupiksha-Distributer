@@ -28,6 +28,11 @@ I have integrated the 2Factor.in OTP verification service into the registration 
         -   Added a "Verify" button and error message display for OTP.
         -   Added a success indicator (checkmark) for verified mobile numbers.
 
+### Test Mode Enhancements
+- **OTP Fallback**: If the 2Factor API fails (e.g., due to a missing or invalid API key), the app now automatically falls back to a "Test Mode".
+- **Visual Feedback**: An error message is displayed informing the user that the real SMS failed, but they can still proceed using the test OTP.
+- **Static Test OTP**: The OTP `123456` is now hardcoded to always pass verification, facilitating development and testing.
+
 ## Verification Results
 
 ### Automated Tests
