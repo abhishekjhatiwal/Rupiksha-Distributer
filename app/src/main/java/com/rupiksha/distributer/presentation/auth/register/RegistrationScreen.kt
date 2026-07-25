@@ -566,7 +566,9 @@ fun StepPersonal(uiState: RegistrationUiState, viewModel: RegistrationViewModel)
                             Icons.Default.CheckCircle,
                             contentDescription = "Verified",
                             tint = BrandPrimary,
-                            modifier = Modifier.padding(start = 8.dp).size(28.dp)
+                            modifier = Modifier
+                                .padding(start = 8.dp)
+                                .size(28.dp)
                         )
                     } else if (uiState.data.mobile.length == 10) {
                         TextButton(
@@ -575,7 +577,10 @@ fun StepPersonal(uiState: RegistrationUiState, viewModel: RegistrationViewModel)
                             modifier = Modifier.padding(start = 4.dp)
                         ) {
                             if (uiState.isOtpSending) {
-                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
                             } else {
                                 Text(
                                     if (uiState.otpTimer > 0) "Resend in ${uiState.otpTimer}s" else "Send OTP",
@@ -598,7 +603,11 @@ fun StepPersonal(uiState: RegistrationUiState, viewModel: RegistrationViewModel)
                             Box(modifier = Modifier.weight(1f)) {
                                 CustomOutlinedTextField(
                                     value = uiState.otpInput,
-                                    onValueChange = { if (it.length <= 6) viewModel.updateOtpInput(it) },
+                                    onValueChange = {
+                                        if (it.length <= 6) viewModel.updateOtpInput(
+                                            it
+                                        )
+                                    },
                                     placeholder = "Enter 6-digit OTP",
                                     leadingIcon = Icons.Default.LockClock,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -613,7 +622,11 @@ fun StepPersonal(uiState: RegistrationUiState, viewModel: RegistrationViewModel)
                                 colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary)
                             ) {
                                 if (uiState.isOtpVerifying) {
-                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                    CircularProgressIndicator(
+                                        color = Color.White,
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
                                 } else {
                                     Text("Verify", color = Color.White)
                                 }
@@ -699,49 +712,9 @@ fun StepBusiness(uiState: RegistrationUiState, viewModel: RegistrationViewModel)
                 errorMessage = uiState.fieldErrors["permanentAddress"]
             )
         }
-        Spacer(Modifier.height(16.dp))
-
-        AnimatedField(180) {
-            CustomOutlinedTextField(
-                value = uiState.data.district,
-                onValueChange = { district -> viewModel.updateData("district") { it.copy(district = district) } },
-                placeholder = "District",
-                leadingIcon = Icons.Default.LocationCity,
-                errorMessage = uiState.fieldErrors["district"]
-            )
-        }
 
         Spacer(Modifier.height(16.dp))
-/*
-        AnimatedField(120) {
-            Row {
-                Box(modifier = Modifier.weight(1f)) {
-                    CustomOutlinedTextField(
-                        value = uiState.data.pincode,
-                        onValueChange = { pincode ->
-                            if (pincode.length <= 6 && pincode.all { it.isDigit() }) {
-                                viewModel.updateData("pincode") { it.copy(pincode = pincode) }
-                            }
-                        },
-                        placeholder = "Pincode",
-                        leadingIcon = Icons.Default.Numbers,
-                        errorMessage = uiState.fieldErrors["pincode"],
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                }
-                Spacer(Modifier.width(8.dp))
-                Box(modifier = Modifier.weight(1f)) {
-                    CustomOutlinedTextField(
-                        value = uiState.data.state,
-                        onValueChange = { state -> viewModel.updateData("state") { it.copy(state = state) } },
-                        placeholder = "State",
-                        leadingIcon = Icons.Default.Map,
-                        errorMessage = uiState.fieldErrors["state"]
-                    )
-                }
-            }
-        }
-*/
+
         AnimatedField(120) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 CustomOutlinedTextField(
@@ -767,6 +740,24 @@ fun StepBusiness(uiState: RegistrationUiState, viewModel: RegistrationViewModel)
                             .height(2.dp)
                             .padding(horizontal = 12.dp),
                         color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                AnimatedField(180) {
+                    CustomOutlinedTextField(
+                        value = uiState.data.district,
+                        onValueChange = { district ->
+                            viewModel.updateData("district") {
+                                it.copy(
+                                    district = district
+                                )
+                            }
+                        },
+                        placeholder = "District",
+                        leadingIcon = Icons.Default.LocationCity,
+                        errorMessage = uiState.fieldErrors["district"]
                     )
                 }
 

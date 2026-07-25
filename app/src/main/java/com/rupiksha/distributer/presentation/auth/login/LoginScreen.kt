@@ -227,7 +227,8 @@ fun LoginContent(
                     leadingIcon = Icons.Default.Lock,
                     isPassword = true,
                     isPasswordVisible = isPasswordVisible,
-                    onPasswordToggle = { isPasswordVisible = !isPasswordVisible }
+                    onPasswordToggle = { isPasswordVisible = !isPasswordVisible },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)
                 )
             }
 
@@ -469,7 +470,7 @@ fun CustomOutlinedTextField(
     onPasswordToggle: () -> Unit = {},
     isValid: Boolean = value.isNotBlank(),
     errorMessage: String? = null,
-    keyboardOptions: KeyboardOptions = if (isPassword) KeyboardOptions(keyboardType = KeyboardType.NumberPassword) else KeyboardOptions.Default
+    keyboardOptions: KeyboardOptions = if (isPassword) KeyboardOptions(keyboardType = KeyboardType.Password) else KeyboardOptions.Default
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         // Border and icon glow smoothly toward primary once the field has valid content
