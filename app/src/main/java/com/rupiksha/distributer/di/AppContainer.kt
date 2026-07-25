@@ -21,7 +21,11 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
+import android.util.Log
 import kotlinx.serialization.json.Json
 
 class AppContainer {
@@ -42,8 +46,17 @@ class AppContainer {
                 ignoreUnknownKeys = true
             })
         }
+        install(Logging) {
+            logger = object : Logger {
+                override fun log(message: String) {
+                    Log.d("Ktor", message)
+                }
+            }
+            level = LogLevel.ALL
+        }
         defaultRequest {
-            url("https://api.example.com/") // Mock base URL
+            // Remove mock base URL if we are using full URLs in services
+            // url("https://api.example.com/") 
         }
     }
 

@@ -1,33 +1,48 @@
-# Implementation Plan - Fix Pincode Auto-fetch Not Triggering on Subsequent Edits
+# Implementation Plan - Debugging 2Factor OTP Integration
 
-The user reported that the pincode API is not called again after the first successful auto-fill when they edit the pincode. This plan aims to make the pincode fetching logic more robust by handling concurrency and providing feedback.
+The user integrated the 2Factor.in OTP API but is not receiving any OTPs. This plan focuses on adding diagnostic logging and fixing potential configuration issues with the API key.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Network Connectivity:** The logs show `ENETUNREACH (Network is unreachable)`. This means your emulator or device currently does not have internet access. Please ensure your computer is connected to the internet and that the emulator's Wi-Fi is toggled ON.
+>
+> **API Key Sanitization:** I have added code to automatically remove the "API Key " prefix if it's present in your `.env` file, but it's still best practice to keep only the raw key in your configuration.
+
+> [!WARNING]
+> A `google-services.json` file is still missing. This won't block OTP, but it's causing Firebase errors and app lag.
 
 ## Proposed Changes
 
-### 1. Presentation Layer
+### [Component: Networking & Diagnostics]
 
-#### [MODIFY] [RegistrationViewModel.kt](file:///D:/Rupiksha/Rupiksha Distributer/rupiksha/app/src/main/java/com/rupiksha/distributer/presentation/auth/register/RegistrationViewModel.kt)
-- Use a `Job` to manage the pincode fetching coroutine, ensuring previous requests are cancelled when a new one starts.
-- Add a check to avoid re-fetching if the pincode hasn't changed (optional, but good for performance).
-- Add error handling to clear `state` and `district` if the pincode fetch fails, or at least provide some feedback.
-- Add debug logging to verify when the API is being called.
+I have sanitized the API key usage and added logging to identify connectivity issues.
 
-#### [MODIFY] [RegistrationScreen.kt](file:///D:/Rupiksha/Rupiksha Distributer/rupiksha/app/src/main/java/com/rupiksha/distributer/presentation/auth/register/RegistrationScreen.kt)
-- Ensure the `onValueChange` for the pincode field is correctly triggering the ViewModel method.
-- Add a visual indicator (like a small loading spinner or changing the trailing icon) when `isPincodeLoading` is true.
+#### [MODIFY] [OtpApiService.kt](file:///D:/Rupiksha/Rupiksha%20Distributer/rupiksha/app/src/main/java/com/rupiksha/distributer/data/remote/api/OtpApiService.kt)
+- Added `.replace("API Key", "").trim()` to ensure the `apiKey` is correctly formatted even if copied with the prefix from the 2Factor dashboard.
 
-### 2. Data Layer
+#### [MODIFY] [libs.versions.toml](file:///D:/Rupiksha/Rupiksha%20Distributer/rupiksha/gradle/libs.versions.toml) [COMPLETED]
+- Added `ktor-client-logging` dependency.
 
-#### [MODIFY] [DistributorApiService.kt](file:///D:/Rupiksha/Rupiksha Distributer/rupiksha/app/src/main/java/com/rupiksha/distributer/data/remote/api/DistributorApiService.kt)
-- Double-check the URL construction to ensure it's always absolute and not affected by the base URL in `AppContainer`.
+#### [MODIFY] [build.gradle.kts](file:///D:/Rupiksha/Rupiksha%20Distributer/rupiksha/app/build.gradle.kts) [COMPLETED]
+- Included `ktor-client-logging` in implementation dependencies.
+
+#### [MODIFY] [AppContainer.kt](file:///D:/Rupiksha/Rupiksha%20Distributer/rupiksha/app/src/main/java/com/rupiksha/distributer/di/AppContainer.kt) [COMPLETED]
+- Configured Ktor `HttpClient` with `Logging` plugin.
+- Set `LogLevel.ALL` to capture full request/response in Logcat.
+
+#### [MODIFY] [OtpRepositoryImpl.kt](file:///D:/Rupiksha/Rupiksha%20Distributer/rupiksha/app/src/main/java/com/rupiksha/distributer/data/repository/OtpRepositoryImpl.kt) [COMPLETED]
+- Added `Log.d` and `Log.e` calls to track the OTP sending process and capture any exceptions or error messages from the API.
 
 ## Verification Plan
 
 ### Automated Tests
-- Update `RegistrationViewModelTest` (if it exists) to verify that `fetchLocationDetails` cancels previous jobs.
+- Run `gradlew :app:assembleDebug` to ensure the project still builds after dependency changes.
 
 ### Manual Verification
-1. Navigate to Step 2.
-2. Enter a valid 6-digit pincode -> Verify auto-fill.
-3. Delete one digit and type a different one -> Verify auto-fill updates.
-4. Paste a 6-digit pincode over an existing one -> Verify auto-fill.
+1. Deploy the app to a device/emulator.
+2. Navigate to the Registration screen.
+3. Enter a 10-digit mobile number and tap "Send OTP".
+4. Monitor Logcat with the tag `Ktor` and `OtpRepository` to see the outgoing URL and the response from 2Factor.in.
+5. If an error is logged (e.g., 401 Unauthorized or 400 Bad Request), verify the API key and phone number format.
+6. Check if the error message is correctly displayed on the UI.
