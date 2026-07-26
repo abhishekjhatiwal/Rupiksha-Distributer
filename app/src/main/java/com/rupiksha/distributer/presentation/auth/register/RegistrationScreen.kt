@@ -1,17 +1,15 @@
 package com.rupiksha.distributer.presentation.auth.register
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.core.content.FileProvider
-import java.io.File
-import android.net.Uri
-import android.content.Context
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,9 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -39,24 +34,33 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlin.math.sin
+import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.rupiksha.distributer.di.AppContainer
 import com.rupiksha.distributer.presentation.auth.login.CustomOutlinedTextField
 import com.rupiksha.distributer.ui.theme.*
+import com.rupiksha.distributer.util.ImageUtils
 import com.rupiksha.distributer.util.LocationUtils
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
+import kotlin.math.sin
 import kotlin.time.Duration.Companion.milliseconds
 
 private val stepTitles = listOf("Personal", "Business", "KYC & Finance", "Documents", "Security")
@@ -1068,11 +1072,13 @@ fun StepMedia(uiState: RegistrationUiState, viewModel: RegistrationViewModel) {
     var showSourcePicker by remember { mutableStateOf(false) }
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
 
+    val scope = rememberCoroutineScope()
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            handleImageSelection(it, activeDocType, viewModel)
+            handleImageSelection(context, it, activeDocType, viewModel, scope)
             activeDocType = null
         }
     }
@@ -1082,7 +1088,7 @@ fun StepMedia(uiState: RegistrationUiState, viewModel: RegistrationViewModel) {
     ) { success ->
         if (success) {
             tempCameraUri?.let {
-                handleImageSelection(it, activeDocType, viewModel)
+                handleImageSelection(context, it, activeDocType, viewModel, scope)
                 activeDocType = null
             }
         }
@@ -1137,66 +1143,60 @@ fun StepMedia(uiState: RegistrationUiState, viewModel: RegistrationViewModel) {
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = 8.dp)
         )
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min)) {
-            Box(modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()) {
-                MediaItem(
-                    label = "Front Photo",
-                    isUploaded = uiState.data.adharFrontUri != null,
-                    isError = uiState.fieldErrors["adharFront"] != null,
-                    modifier = Modifier.fillMaxHeight()
-                ) {
-                    openSourcePicker(DocumentType.ADHAR_FRONT)
-                }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            MediaItem(
+                label = "Front Photo",
+                uri = uiState.data.adharFrontUri,
+                isError = uiState.fieldErrors["adharFront"] != null,
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+            ) {
+                openSourcePicker(DocumentType.ADHAR_FRONT)
             }
             Spacer(Modifier.width(16.dp))
-            Box(modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()) {
-                MediaItem(
-                    label = "Back Photo",
-                    isUploaded = uiState.data.adharBackUri != null,
-                    isError = uiState.fieldErrors["adharBack"] != null,
-                    modifier = Modifier.fillMaxHeight()
-                ) {
-                    openSourcePicker(DocumentType.ADHAR_BACK)
-                }
+            MediaItem(
+                label = "Back Photo",
+                uri = uiState.data.adharBackUri,
+                isError = uiState.fieldErrors["adharBack"] != null,
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+            ) {
+                openSourcePicker(DocumentType.ADHAR_BACK)
             }
         }
         Spacer(Modifier.height(16.dp))
 
         // PAN Section
         Text("PAN Card", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min)) {
-            Box(modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()) {
-                MediaItem(
-                    label = "Front Photo",
-                    isUploaded = uiState.data.panFrontUri != null,
-                    isError = uiState.fieldErrors["panFront"] != null,
-                    modifier = Modifier.fillMaxHeight()
-                ) {
-                    openSourcePicker(DocumentType.PAN_FRONT)
-                }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            MediaItem(
+                label = "Front Photo",
+                uri = uiState.data.panFrontUri,
+                isError = uiState.fieldErrors["panFront"] != null,
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+            ) {
+                openSourcePicker(DocumentType.PAN_FRONT)
             }
             Spacer(Modifier.width(16.dp))
-            Box(modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()) {
-                MediaItem(
-                    label = "Back Photo",
-                    isUploaded = uiState.data.panBackUri != null,
-                    isError = uiState.fieldErrors["panBack"] != null,
-                    modifier = Modifier.fillMaxHeight()
-                ) {
-                    openSourcePicker(DocumentType.PAN_BACK)
-                }
+            MediaItem(
+                label = "Back Photo",
+                uri = uiState.data.panBackUri,
+                isError = uiState.fieldErrors["panBack"] != null,
+                modifier = Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+            ) {
+                openSourcePicker(DocumentType.PAN_BACK)
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -1238,7 +1238,7 @@ fun StepMedia(uiState: RegistrationUiState, viewModel: RegistrationViewModel) {
                 Spacer(Modifier.height(12.dp))
                 MediaItem(
                     "Upload ${uiState.data.additionalDocType}",
-                    uiState.data.additionalDocUri != null
+                    uri = uiState.data.additionalDocUri
                 ) {
                     openSourcePicker(DocumentType.ADDITIONAL_DOC)
                 }
@@ -1250,7 +1250,7 @@ fun StepMedia(uiState: RegistrationUiState, viewModel: RegistrationViewModel) {
             Column {
                 MediaItem(
                     label = "Photo with Employee (with GPS)",
-                    isUploaded = uiState.data.photoWithEmployeeUri != null,
+                    uri = uiState.data.photoWithEmployeeUri,
                     isError = uiState.fieldErrors["photoEmployee"] != null
                 ) {
                     if (locationPermissionState.status.isGranted) {
@@ -1281,7 +1281,7 @@ fun StepMedia(uiState: RegistrationUiState, viewModel: RegistrationViewModel) {
             Column {
                 MediaItem(
                     label = "Shop Photo (with GPS)",
-                    isUploaded = uiState.data.shopPhotoUri != null,
+                    uri = uiState.data.shopPhotoUri,
                     isError = uiState.fieldErrors["shopPhoto"] != null
                 ) {
                     if (locationPermissionState.status.isGranted) {
@@ -1313,16 +1313,25 @@ private enum class DocumentType {
     ADHAR_FRONT, ADHAR_BACK, PAN_FRONT, PAN_BACK, ADDITIONAL_DOC, PHOTO_EMPLOYEE, SHOP_PHOTO
 }
 
-private fun handleImageSelection(uri: Uri, type: DocumentType?, viewModel: RegistrationViewModel) {
-    when (type) {
-        DocumentType.ADHAR_FRONT -> viewModel.updateData { it.copy(adharFrontUri = uri) }
-        DocumentType.ADHAR_BACK -> viewModel.updateData { it.copy(adharBackUri = uri) }
-        DocumentType.PAN_FRONT -> viewModel.updateData { it.copy(panFrontUri = uri) }
-        DocumentType.PAN_BACK -> viewModel.updateData { it.copy(panBackUri = uri) }
-        DocumentType.ADDITIONAL_DOC -> viewModel.updateData { it.copy(additionalDocUri = uri) }
-        DocumentType.PHOTO_EMPLOYEE -> viewModel.updateData { it.copy(photoWithEmployeeUri = uri) }
-        DocumentType.SHOP_PHOTO -> viewModel.updateData { it.copy(shopPhotoUri = uri) }
-        null -> {}
+private fun handleImageSelection(
+    context: Context,
+    uri: Uri,
+    type: DocumentType?,
+    viewModel: RegistrationViewModel,
+    scope: CoroutineScope
+) {
+    scope.launch {
+        val compressedUri = ImageUtils.compressImage(context, uri)
+        when (type) {
+            DocumentType.ADHAR_FRONT -> viewModel.updateData { it.copy(adharFrontUri = compressedUri) }
+            DocumentType.ADHAR_BACK -> viewModel.updateData { it.copy(adharBackUri = compressedUri) }
+            DocumentType.PAN_FRONT -> viewModel.updateData { it.copy(panFrontUri = compressedUri) }
+            DocumentType.PAN_BACK -> viewModel.updateData { it.copy(panBackUri = compressedUri) }
+            DocumentType.ADDITIONAL_DOC -> viewModel.updateData { it.copy(additionalDocUri = compressedUri) }
+            DocumentType.PHOTO_EMPLOYEE -> viewModel.updateData { it.copy(photoWithEmployeeUri = compressedUri) }
+            DocumentType.SHOP_PHOTO -> viewModel.updateData { it.copy(shopPhotoUri = compressedUri) }
+            null -> {}
+        }
     }
 }
 
@@ -1337,32 +1346,11 @@ private fun createTmpFileUri(context: Context): Uri {
 @Composable
 fun MediaItem(
     label: String,
-    isUploaded: Boolean,
+    uri: Uri?,
     isError: Boolean = false,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "mediaPulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
-        label = "pulseAlpha"
-    )
-
-    val borderColor by animateColorAsState(
-        targetValue = if (isUploaded) BrandPrimary else if (isError) MaterialTheme.colorScheme.error.copy(
-            alpha = 0.6f
-        ) else BorderLight,
-        animationSpec = tween(300),
-        label = "mediaBorder"
-    )
-    val backgroundTint by animateColorAsState(
-        targetValue = if (isUploaded) BrandPrimary.copy(alpha = 0.06f) else Color.White,
-        animationSpec = tween(300),
-        label = "mediaBackgroundTint"
-    )
-
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val pressScale by animateFloatAsState(
@@ -1374,89 +1362,95 @@ fun MediaItem(
         label = "mediaPressScale"
     )
 
-    val checkScale = remember { Animatable(if (isUploaded) 1f else 0.3f) }
-    LaunchedEffect(isUploaded) {
-        if (isUploaded) {
-            checkScale.animateTo(
-                1f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
-            )
-        } else {
-            checkScale.snapTo(0.3f)
-        }
-    }
+    val borderColor by animateColorAsState(
+        targetValue = if (uri != null) BrandPrimary else if (isError) MaterialTheme.colorScheme.error.copy(
+            alpha = 0.6f
+        ) else BorderLight,
+        animationSpec = tween(300),
+        label = "mediaBorder"
+    )
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 76.dp)
+            .heightIn(min = 90.dp)
             .scale(pressScale)
             .clickable(interactionSource = interactionSource, indication = null) { onClick() },
         shape = RoundedCornerShape(16.dp),
-        color = backgroundTint,
-        tonalElevation = if (isUploaded) 2.dp else 0.dp,
-        shadowElevation = if (isUploaded) 3.dp else 0.dp,
-        border = BorderStroke(1.5.dp, borderColor)
+        color = Color.White,
+        tonalElevation = if (uri != null) 4.dp else 0.dp,
+        shadowElevation = if (uri != null) 6.dp else 0.dp,
+        border = BorderStroke(2.dp, borderColor)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                // Icon sits inside a real circular badge now, instead of a bare 24dp glyph,
-                // so it reads clearly even at a glance on smaller phone screens.
+        Box(contentAlignment = Alignment.Center) {
+            if (uri != null) {
+                AsyncImage(
+                    model = uri,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                // Slight dark overlay to make icons/checkmark pop
                 Box(
                     modifier = Modifier
-                        .size(46.dp)
-                        .scale(if (isUploaded) checkScale.value else 1f)
-                        .clip(CircleShape)
-                        .background(
-                            if (isUploaded) BrandPrimary.copy(alpha = 0.14f)
-                            else Color.Gray.copy(alpha = 0.08f)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AnimatedContent(targetState = isUploaded, label = "mediaIcon") { uploaded ->
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.1f))
+                )
+            }
+
+            if (uri == null) {
+                Text(
+                    text = label,
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isError) MaterialTheme.colorScheme.error else Color.DarkGray,
+                    lineHeight = 18.sp,
+                    modifier = Modifier.padding(horizontal = 48.dp, vertical = 16.dp)
+                )
+            }
+
+            // Icons overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp)
+            ) {
+                // Left status icon (Check circle if uploaded)
+                if (uri != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .align(Alignment.CenterStart)
+                            .clip(CircleShape)
+                            .background(BrandPrimary),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                            imageVector = if (uploaded) Icons.Default.CheckCircle else Icons.Default.CloudUpload,
+                            imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = if (uploaded) BrandPrimary else Color.Gray.copy(alpha = pulseAlpha),
-                            modifier = Modifier.size(26.dp)
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
-                Spacer(Modifier.width(14.dp))
-                Text(
-                    label,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (isError && !isUploaded) MaterialTheme.colorScheme.error else Color.Unspecified,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(BrandPrimary.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.AddAPhoto,
-                    contentDescription = null,
-                    tint = BrandPrimary,
-                    modifier = Modifier.size(20.dp)
-                )
+
+                // Right action icon (Camera/Add)
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .align(Alignment.CenterEnd)
+                        .clip(CircleShape)
+                        .background(BrandPrimary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddAPhoto,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }
