@@ -1,5 +1,6 @@
 package com.rupiksha.distributer.presentation.auth.register
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -235,13 +236,32 @@ class RegistrationViewModel(
     }
 
     fun register() {
+        Log.d("RegistrationViewModel", "register() called")
         if (validateStep(5)) {
+            Log.d("RegistrationViewModel", "Validation passed, starting registration coroutine")
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
-                // Simulation of registration
-                delay(2000)
-                _uiState.update { it.copy(isLoading = false, success = true) }
+                try {
+                    val result = appContainer.registerRepository.registerRetailer(_uiState.value.data)
+                    Log.d("RegistrationViewModel", "Registration result: $result")
+                    when (result) {
+                        is Resource.Success -> {
+                            _uiState.update { it.copy(success = true) }
+                        }
+                        is Resource.Error -> {
+                            _uiState.update { it.copy(error = result.message) }
+                        }
+                        else -> {}
+                    }
+                } catch (e: Exception) {
+                    Log.e("RegistrationViewModel", "Unexpected error in register coroutine", e)
+                    _uiState.update { it.copy(error = e.message) }
+                } finally {
+                    _uiState.update { it.copy(isLoading = false) }
+                }
             }
+        } else {
+            Log.w("RegistrationViewModel", "Validation failed for step 5: ${_uiState.value.fieldErrors}")
         }
     }
 }

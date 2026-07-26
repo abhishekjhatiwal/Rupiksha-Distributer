@@ -1,5 +1,6 @@
 package com.rupiksha.distributer.presentation.auth.register
 
+import android.annotation.SuppressLint
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -10,6 +11,8 @@ import android.net.Uri
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -19,6 +22,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -62,6 +68,7 @@ private val stepSubtitles = listOf(
     "Secure your account"
 )
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun RegistrationScreen(
@@ -133,101 +140,159 @@ fun RegistrationScreen(
                 )
             }
         ) { padding ->
-            Column(
+            // BoxWithConstraints lets us measure available width so the card can size itself
+            // sensibly on phones, foldables and tablets instead of always stretching edge-to-edge.
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                StepIndicator(
-                    currentStep = uiState.currentStep,
-                    totalSteps = 5,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // Wide screens (tablets/foldables) get generous side margins and a capped card
+                // width so the form doesn't stretch into an unreadable single line of text.
+                val isWideScreen = maxWidth > 600.dp
+                val horizontalMargin = if (isWideScreen) 32.dp else 20.dp
+                val contentMaxWidth = 520.dp
 
-                Box(
+                Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
+                        .fillMaxHeight()
+                        .widthIn(max = contentMaxWidth)
+                        .align(Alignment.TopCenter)
+                        .padding(horizontal = horizontalMargin)
                 ) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        shape = RoundedCornerShape(28.dp),
-                        color = Color.White.copy(alpha = 0.86f),
-                        shadowElevation = 6.dp,
-                        border = BorderStroke(
-                            1.dp,
-                            Brush.linearGradient(
-                                listOf(BrandPrimary.copy(alpha = 0.18f), Color.Transparent)
-                            )
-                        )
-                    ) {
-                        AnimatedContent(
-                            targetState = uiState.currentStep,
-                            transitionSpec = {
-                                val forward = targetState > initialState
-                                val enterDir = if (forward) 1 else -1
-                                val exitDir = if (forward) -1 else 1
-                                (slideInHorizontally(tween(350)) { w -> enterDir * w } + fadeIn(
-                                    tween(350)
-                                ) + scaleIn(
-                                    tween(350),
-                                    initialScale = 0.97f
-                                )) togetherWith
-                                        (slideOutHorizontally(tween(300)) { w -> exitDir * w } + fadeOut(
-                                            tween(200)
-                                        ))
-                            },
-                            label = "stepContent"
-                        ) { step ->
-                            when (step) {
-                                1 -> StepPersonal(uiState, viewModel)
-                                2 -> StepBusiness(uiState, viewModel)
-                                3 -> StepKycFinance(uiState, viewModel)
-                                4 -> StepMedia(uiState, viewModel)
-                                5 -> StepSecurity(uiState, viewModel)
-                            }
-                        }
-                    }
-                }
+                    StepIndicator(
+                        currentStep = uiState.currentStep,
+                        totalSteps = 5,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                // Bottom Actions
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    AnimatedVisibility(
-                        visible = uiState.currentStep > 1,
-                        enter = fadeIn(tween(250)) + expandHorizontally(tween(250)),
-                        exit = fadeOut(tween(150)) + shrinkHorizontally(tween(150))
-                    ) {
-                        Row {
-                            OutlinedButton(
-                                onClick = { viewModel.previousStep() },
-                                modifier = Modifier
-                                    .width(120.dp)
-                                    .height(52.dp),
-                                shape = RoundedCornerShape(14.dp),
-                                border = BorderStroke(1.dp, BorderLight)
-                            ) {
-                                Text("Previous", color = TextSecondary)
-                            }
-                            Spacer(Modifier.width(16.dp))
-                        }
-                    }
-
-                    AnimatedPrimaryButton(
-                        text = if (uiState.currentStep < 5) "Next" else "Register",
-                        isLoading = uiState.isLoading,
+                    Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp),
-                        onClick = {
-                            if (uiState.currentStep < 5) viewModel.nextStep() else viewModel.register()
+                            .fillMaxWidth()
+                            .padding(top = 4.dp, bottom = 16.dp)
+                    ) {
+                        val cardInfiniteTransition =
+                            rememberInfiniteTransition(label = "cardBorderAnim")
+                        val cardShimmer by cardInfiniteTransition.animateFloat(
+                            initialValue = -1f,
+                            targetValue = 1f,
+                            animationSpec = infiniteRepeatable(tween(3200, easing = LinearEasing)),
+                            label = "cardShimmer"
+                        )
+                        val cardTertiary = MaterialTheme.colorScheme.tertiary
+                        val cardBorderBrush = Brush.linearGradient(
+                            colors = listOf(
+                                BrandPrimary.copy(alpha = 0.55f),
+                                cardTertiary.copy(alpha = 0.45f),
+                                BrandPrimaryDark.copy(alpha = 0.55f),
+                                BrandPrimary.copy(alpha = 0.55f)
+                            ),
+                            start = Offset(cardShimmer * 500f, 0f),
+                            end = Offset(cardShimmer * 500f + 500f, 500f)
+                        )
+
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            shape = RoundedCornerShape(28.dp),
+                            color = Color.White.copy(alpha = 0.92f),
+                            shadowElevation = 8.dp,
+                            border = BorderStroke(1.6.dp, cardBorderBrush)
+                        ) {
+                            AnimatedContent(
+                                targetState = uiState.currentStep,
+                                transitionSpec = {
+                                    val forward = targetState > initialState
+                                    val enterDir = if (forward) 1 else -1
+                                    val exitDir = if (forward) -1 else 1
+                                    (slideInHorizontally(tween(350)) { w -> enterDir * w } + fadeIn(
+                                        tween(350)
+                                    ) + scaleIn(
+                                        tween(350),
+                                        initialScale = 0.97f
+                                    )) togetherWith
+                                            (slideOutHorizontally(tween(300)) { w -> exitDir * w } + fadeOut(
+                                                tween(200)
+                                            ))
+                                },
+                                label = "stepContent"
+                            ) { step ->
+                                when (step) {
+                                    1 -> StepPersonal(uiState, viewModel)
+                                    2 -> StepBusiness(uiState, viewModel)
+                                    3 -> StepKycFinance(uiState, viewModel)
+                                    4 -> StepMedia(uiState, viewModel)
+                                    5 -> StepSecurity(uiState, viewModel)
+                                }
+                            }
                         }
-                    )
+                    }
+
+                    // Bottom Actions — kept inside the same max-width column as the card so the
+                    // buttons always line up flush with the card's edges, at every screen size.
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AnimatedVisibility(
+                            visible = uiState.currentStep > 1,
+                            enter = fadeIn(tween(250)) + expandHorizontally(tween(250)),
+                            exit = fadeOut(tween(150)) + shrinkHorizontally(tween(150))
+                        ) {
+                            Row {
+                                val prevInfiniteTransition =
+                                    rememberInfiniteTransition(label = "prevBtnBorderAnim")
+                                val prevShimmer by prevInfiniteTransition.animateFloat(
+                                    initialValue = -1f,
+                                    targetValue = 1f,
+                                    animationSpec = infiniteRepeatable(
+                                        tween(
+                                            2800,
+                                            easing = LinearEasing
+                                        )
+                                    ),
+                                    label = "prevBtnShimmer"
+                                )
+                                val prevTertiary = MaterialTheme.colorScheme.tertiary
+                                val prevBorderBrush = Brush.linearGradient(
+                                    colors = listOf(
+                                        BrandPrimary.copy(alpha = 0.55f),
+                                        prevTertiary.copy(alpha = 0.45f),
+                                        BrandPrimaryDark.copy(alpha = 0.55f),
+                                        BrandPrimary.copy(alpha = 0.55f)
+                                    ),
+                                    start = Offset(prevShimmer * 180f, 0f),
+                                    end = Offset(prevShimmer * 180f + 180f, 180f)
+                                )
+
+                                OutlinedButton(
+                                    onClick = { viewModel.previousStep() },
+                                    modifier = Modifier
+                                        .width(120.dp)
+                                        .height(52.dp),
+                                    shape = RoundedCornerShape(14.dp),
+                                    border = BorderStroke(1.8.dp, prevBorderBrush)
+                                ) {
+                                    Text("Previous", color = TextSecondary)
+                                }
+                                Spacer(Modifier.width(16.dp))
+                            }
+                        }
+
+                        AnimatedPrimaryButton(
+                            text = if (uiState.currentStep < 5) "Next" else "Register",
+                            isLoading = uiState.isLoading,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            onClick = {
+                                if (uiState.currentStep < 5) viewModel.nextStep() else viewModel.register()
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -334,6 +399,7 @@ fun AnimatedPrimaryButton(
             containerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent
         ),
+        border = BorderStroke(1.dp, BrandPrimaryDark.copy(alpha = 0.35f)),
         contentPadding = PaddingValues()
     ) {
         Box(
@@ -394,81 +460,23 @@ private fun Modifier.drawWithShimmer(offset: Float, enabled: Boolean): Modifier 
     )
 )
 
-/** Row of connected circular step markers on a continuous progress track; completed steps morph into a checkmark. */
+/**
+ * Free-floating row of outline-only step markers connected by a progress track.
+ * No card/rectangle wrapper — the dots sit directly on the background.
+ * The active step gets an orbiting gradient ring + soft pulse; completed steps
+ * morph their border color and swap the number for a checkmark.
+ */
 @Composable
 fun StepIndicator(currentStep: Int, totalSteps: Int, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.padding(horizontal = 24.dp, vertical = 18.dp),
+        modifier = modifier.padding(vertical = 10.dp, horizontal = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         for (step in 1..totalSteps) {
             val isCompleted = step < currentStep
             val isCurrent = step == currentStep
 
-            val circleScale by animateFloatAsState(
-                targetValue = if (isCurrent) 1.18f else 1f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                ),
-                label = "circleScale"
-            )
-            val glowAlpha by animateFloatAsState(
-                targetValue = if (isCurrent) 0.35f else 0f,
-                animationSpec = tween(400),
-                label = "glowAlpha"
-            )
-
-            Box(contentAlignment = Alignment.Center) {
-                // Soft glow ring behind the active step
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(BrandPrimary.copy(alpha = glowAlpha))
-                )
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .scale(circleScale)
-                        .clip(CircleShape)
-                        .background(
-                            if (isCompleted || isCurrent)
-                                Brush.linearGradient(listOf(BrandPrimary, BrandPrimaryDark))
-                            else
-                                Brush.linearGradient(listOf(BorderLight, BorderLight))
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AnimatedContent(
-                        targetState = isCompleted,
-                        transitionSpec = {
-                            (fadeIn(tween(250)) + scaleIn(
-                                tween(250),
-                                initialScale = 0.4f
-                            )) togetherWith
-                                    (fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.4f))
-                        },
-                        label = "stepMarker"
-                    ) { completed ->
-                        if (completed) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        } else {
-                            Text(
-                                "$step",
-                                color = if (isCurrent) Color.White else TextSecondary,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
+            StepDot(step = step, isCompleted = isCompleted, isCurrent = isCurrent)
 
             if (step != totalSteps) {
                 val lineFill by animateFloatAsState(
@@ -479,9 +487,10 @@ fun StepIndicator(currentStep: Int, totalSteps: Int, modifier: Modifier = Modifi
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(BorderLight)
+                        .padding(horizontal = 2.dp)
+                        .height(2.dp)
+                        .clip(RoundedCornerShape(1.dp))
+                        .background(BorderLight.copy(alpha = 0.6f))
                 ) {
                     Box(
                         modifier = Modifier
@@ -489,8 +498,128 @@ fun StepIndicator(currentStep: Int, totalSteps: Int, modifier: Modifier = Modifi
                             .fillMaxWidth(lineFill)
                             .background(
                                 Brush.horizontalGradient(listOf(BrandPrimary, BrandPrimaryDark)),
-                                RoundedCornerShape(2.dp)
+                                RoundedCornerShape(1.dp)
                             )
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** A single outline-style step marker: no filled background, just an animated border. */
+@Composable
+private fun StepDot(step: Int, isCompleted: Boolean, isCurrent: Boolean) {
+    val scale by animateFloatAsState(
+        targetValue = if (isCurrent) 1.14f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "dotScale"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (isCompleted || isCurrent) BrandPrimary else BorderLight,
+        animationSpec = tween(400),
+        label = "borderColor"
+    )
+    val textColor by animateColorAsState(
+        targetValue = if (isCurrent) BrandPrimary else if (isCompleted) BrandPrimary else TextSecondary,
+        animationSpec = tween(400),
+        label = "textColor"
+    )
+    val fillTint by animateColorAsState(
+        targetValue = if (isCurrent) BrandPrimary.copy(alpha = 0.08f) else Color.Transparent,
+        animationSpec = tween(400),
+        label = "fillTint"
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "stepDotOrbit")
+    // Slow, continuous rotation that only visually matters while this step is active.
+    val orbitRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(2200, easing = LinearEasing)),
+        label = "orbitRotation"
+    )
+    // Gentle breathing glow behind the active step.
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.12f,
+        targetValue = 0.32f,
+        animationSpec = infiniteRepeatable(
+            tween(900, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseAlpha"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .scale(scale),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isCurrent) {
+            // Soft halo — no rectangle, just a translucent glow that breathes.
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(BrandPrimary.copy(alpha = pulseAlpha))
+            )
+            // Orbiting gradient arc that spins around the border, like a tiny loader.
+            Canvas(modifier = Modifier.size(32.dp)) {
+                rotate(orbitRotation) {
+                    drawArc(
+                        brush = Brush.sweepGradient(
+                            listOf(
+                                BrandPrimary.copy(alpha = 0f),
+                                BrandPrimaryDark,
+                                BrandPrimary,
+                                BrandPrimary.copy(alpha = 0f)
+                            )
+                        ),
+                        startAngle = 0f,
+                        sweepAngle = 300f,
+                        useCenter = false,
+                        style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round)
+                    )
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(fillTint)
+                .border(BorderStroke(2.dp, borderColor), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            AnimatedContent(
+                targetState = isCompleted,
+                transitionSpec = {
+                    (fadeIn(tween(250)) + scaleIn(
+                        tween(250),
+                        initialScale = 0.4f
+                    )) togetherWith
+                            (fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.4f))
+                },
+                label = "stepMarker"
+            ) { completed ->
+                if (completed) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        tint = BrandPrimary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                } else {
+                    Text(
+                        "$step",
+                        color = textColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -599,8 +728,20 @@ fun StepPersonal(uiState: RegistrationUiState, viewModel: RegistrationViewModel)
                     exit = shrinkVertically() + fadeOut()
                 ) {
                     Column(modifier = Modifier.padding(top = 16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.weight(1f)) {
+                        // IntrinsicSize.Min lets the button stretch to exactly match the text
+                        // field's real rendered height, instead of guessing a fixed dp value
+                        // that drifts out of alignment whenever the field's own height changes.
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Min),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                            ) {
                                 CustomOutlinedTextField(
                                     value = uiState.otpInput,
                                     onValueChange = {
@@ -613,13 +754,20 @@ fun StepPersonal(uiState: RegistrationUiState, viewModel: RegistrationViewModel)
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                                 )
                             }
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(10.dp))
                             Button(
                                 onClick = { viewModel.verifyOtp() },
                                 enabled = uiState.otpInput.length >= 4 && !uiState.isOtpVerifying,
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.height(52.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary)
+                                shape = RoundedCornerShape(14.dp),
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .width(96.dp),
+                                border = BorderStroke(1.dp, BrandPrimaryDark.copy(alpha = 0.35f)),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = BrandPrimary,
+                                    disabledContainerColor = BrandPrimary.copy(alpha = 0.4f)
+                                ),
+                                contentPadding = PaddingValues(horizontal = 8.dp)
                             ) {
                                 if (uiState.isOtpVerifying) {
                                     CircularProgressIndicator(
@@ -628,7 +776,11 @@ fun StepPersonal(uiState: RegistrationUiState, viewModel: RegistrationViewModel)
                                         strokeWidth = 2.dp
                                     )
                                 } else {
-                                    Text("Verify", color = Color.White)
+                                    Text(
+                                        "Verify",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
                                 }
                             }
                         }
@@ -985,22 +1137,30 @@ fun StepMedia(uiState: RegistrationUiState, viewModel: RegistrationViewModel) {
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = 8.dp)
         )
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Box(modifier = Modifier.weight(1f)) {
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)) {
+            Box(modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()) {
                 MediaItem(
                     label = "Front Photo",
                     isUploaded = uiState.data.adharFrontUri != null,
-                    isError = uiState.fieldErrors["adharFront"] != null
+                    isError = uiState.fieldErrors["adharFront"] != null,
+                    modifier = Modifier.fillMaxHeight()
                 ) {
                     openSourcePicker(DocumentType.ADHAR_FRONT)
                 }
             }
             Spacer(Modifier.width(16.dp))
-            Box(modifier = Modifier.weight(1f)) {
+            Box(modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()) {
                 MediaItem(
                     label = "Back Photo",
                     isUploaded = uiState.data.adharBackUri != null,
-                    isError = uiState.fieldErrors["adharBack"] != null
+                    isError = uiState.fieldErrors["adharBack"] != null,
+                    modifier = Modifier.fillMaxHeight()
                 ) {
                     openSourcePicker(DocumentType.ADHAR_BACK)
                 }
@@ -1010,22 +1170,30 @@ fun StepMedia(uiState: RegistrationUiState, viewModel: RegistrationViewModel) {
 
         // PAN Section
         Text("PAN Card", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Box(modifier = Modifier.weight(1f)) {
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)) {
+            Box(modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()) {
                 MediaItem(
                     label = "Front Photo",
                     isUploaded = uiState.data.panFrontUri != null,
-                    isError = uiState.fieldErrors["panFront"] != null
+                    isError = uiState.fieldErrors["panFront"] != null,
+                    modifier = Modifier.fillMaxHeight()
                 ) {
                     openSourcePicker(DocumentType.PAN_FRONT)
                 }
             }
             Spacer(Modifier.width(16.dp))
-            Box(modifier = Modifier.weight(1f)) {
+            Box(modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()) {
                 MediaItem(
                     label = "Back Photo",
                     isUploaded = uiState.data.panBackUri != null,
-                    isError = uiState.fieldErrors["panBack"] != null
+                    isError = uiState.fieldErrors["panBack"] != null,
+                    modifier = Modifier.fillMaxHeight()
                 ) {
                     openSourcePicker(DocumentType.PAN_BACK)
                 }
@@ -1167,7 +1335,13 @@ private fun createTmpFileUri(context: Context): Uri {
 }
 
 @Composable
-fun MediaItem(label: String, isUploaded: Boolean, isError: Boolean = false, onClick: () -> Unit) {
+fun MediaItem(
+    label: String,
+    isUploaded: Boolean,
+    isError: Boolean = false,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     val infiniteTransition = rememberInfiniteTransition(label = "mediaPulse")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.5f,
@@ -1216,39 +1390,74 @@ fun MediaItem(label: String, isUploaded: Boolean, isError: Boolean = false, onCl
     }
 
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = 76.dp)
             .scale(pressScale)
             .clickable(interactionSource = interactionSource, indication = null) { onClick() },
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         color = backgroundTint,
         tonalElevation = if (isUploaded) 2.dp else 0.dp,
         shadowElevation = if (isUploaded) 3.dp else 0.dp,
         border = BorderStroke(1.5.dp, borderColor)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.scale(if (isUploaded) checkScale.value else 1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                // Icon sits inside a real circular badge now, instead of a bare 24dp glyph,
+                // so it reads clearly even at a glance on smaller phone screens.
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .scale(if (isUploaded) checkScale.value else 1f)
+                        .clip(CircleShape)
+                        .background(
+                            if (isUploaded) BrandPrimary.copy(alpha = 0.14f)
+                            else Color.Gray.copy(alpha = 0.08f)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     AnimatedContent(targetState = isUploaded, label = "mediaIcon") { uploaded ->
                         Icon(
                             imageVector = if (uploaded) Icons.Default.CheckCircle else Icons.Default.CloudUpload,
                             contentDescription = null,
-                            tint = if (uploaded) BrandPrimary else Color.Gray.copy(alpha = pulseAlpha)
+                            tint = if (uploaded) BrandPrimary else Color.Gray.copy(alpha = pulseAlpha),
+                            modifier = Modifier.size(26.dp)
                         )
                     }
                 }
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(14.dp))
                 Text(
                     label,
                     fontSize = 14.sp,
-                    color = if (isError && !isUploaded) MaterialTheme.colorScheme.error else Color.Unspecified
+                    fontWeight = FontWeight.Medium,
+                    color = if (isError && !isUploaded) MaterialTheme.colorScheme.error else Color.Unspecified,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
             }
-            Icon(Icons.Default.AddAPhoto, contentDescription = null, tint = BrandPrimary)
+            Spacer(Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(BrandPrimary.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.AddAPhoto,
+                    contentDescription = null,
+                    tint = BrandPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
@@ -1336,6 +1545,17 @@ fun StepSecurity(uiState: RegistrationUiState, viewModel: RegistrationViewModel)
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)
             )
         }
+
+        if (uiState.error != null) {
+            Spacer(Modifier.height(16.dp))
+            Text(
+                uiState.error!!,
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+        }
     }
 }
 
@@ -1382,17 +1602,22 @@ fun SuccessOverlay(visible: Boolean) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.45f)),
+                .background(Color.Black.copy(alpha = 0.45f))
+                .padding(32.dp),
             contentAlignment = Alignment.Center
         ) {
             Surface(
                 shape = RoundedCornerShape(24.dp),
                 color = Color.White,
                 shadowElevation = 12.dp,
-                modifier = Modifier.padding(40.dp)
+                modifier = Modifier
+                    .widthIn(max = 320.dp)
+                    .fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(32.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(

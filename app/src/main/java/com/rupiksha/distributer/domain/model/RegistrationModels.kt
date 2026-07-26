@@ -47,6 +47,39 @@ data class RegistrationData(
 )
 
 @Serializable
+data class RetailerEntity(
+    val id: String,
+    val full_name: String,
+    val mobile_number: String,
+    val email: String,
+    val shop_name: String,
+    val shop_address: String,
+    val permanent_address: String,
+    val pincode: String,
+    val state: String,
+    val district: String,
+    val adhar_number: String,
+    val pan_number: String,
+    val bank_account_holder: String,
+    val bank_account_number: String,
+    val bank_name: String,
+    val bank_ifsc: String,
+    val upi_id: String? = null,
+    val pin: String? = null,
+    val adhar_front_url: String? = null,
+    val adhar_back_url: String? = null,
+    val pan_front_url: String? = null,
+    val pan_back_url: String? = null,
+    val additional_doc_url: String? = null,
+    val additional_doc_type: String? = null,
+    val photo_with_employee_url: String? = null,
+    val shop_photo_url: String? = null,
+    val employee_gps_location: String? = null,
+    val shop_gps_location: String? = null,
+    val onboarding_status: String = "pending"
+)
+
+@Serializable
 data class RegistrationRequest(
     val name: String,
     val mobile: String,

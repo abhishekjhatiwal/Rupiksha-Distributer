@@ -1,0 +1,9 @@
+- [x] Update Implementation Plan with `retailers` table name
+- [x] Generate SQL script for `retailers` table
+- [x] Generate SQL script for `retailer-docs` bucket
+- [x] Provide instructions for copying to Supabase
+- [x] Add `supabase-storage` dependency
+- [x] Update `AppContainer` to support Storage and Context
+- [x] Add `RetailerEntity` domain model
+- [x] Implement registration logic in `RegisterRepositoryImpl`
+- [x] Update `RegistrationViewModel` to trigger registration

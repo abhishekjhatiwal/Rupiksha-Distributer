@@ -25,17 +25,20 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
+import android.content.Context
 import android.util.Log
+import io.github.jan.supabase.storage.Storage
 import kotlinx.serialization.json.Json
 
-class AppContainer {
+class AppContainer(private val context: Context) {
 
     val supabaseClient: SupabaseClient = createSupabaseClient(
-        supabaseUrl = SUPABASE_URL, // Replace with your URL or use BuildConfig
-        supabaseKey = SUPABASE_KEY // Replace with your Key or use BuildConfig
+        supabaseUrl = SUPABASE_URL,
+        supabaseKey = SUPABASE_KEY
     ) {
         install(Auth)
         install(Postgrest)
+        install(Storage)
     }
 
     private val client = HttpClient(OkHttp) {
@@ -72,7 +75,7 @@ class AppContainer {
     }
 
     val registerRepository: RegisterRepository by lazy {
-        RegisterRepositoryImpl(apiService)
+        RegisterRepositoryImpl(apiService, supabaseClient, context)
     }
 
     val getPincodeDetailsUseCase: GetPincodeDetailsUseCase by lazy {
