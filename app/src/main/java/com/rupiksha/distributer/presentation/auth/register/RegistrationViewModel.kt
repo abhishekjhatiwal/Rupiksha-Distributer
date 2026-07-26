@@ -9,6 +9,7 @@ import com.rupiksha.distributer.domain.model.RegistrationData
 import com.rupiksha.distributer.domain.usecase.GetPincodeDetailsUseCase
 import com.rupiksha.distributer.domain.usecase.SendOtpUseCase
 import com.rupiksha.distributer.domain.usecase.VerifyOtpUseCase
+import com.rupiksha.distributer.util.ErrorUtils
 import com.rupiksha.distributer.util.Resource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 data class RegistrationUiState(
     val data: RegistrationData = RegistrationData(),
@@ -129,7 +131,7 @@ class RegistrationViewModel(
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
             while (_uiState.value.otpTimer > 0) {
-                delay(1000)
+                delay(1000.milliseconds)
                 _uiState.update { it.copy(otpTimer = it.otpTimer - 1) }
             }
         }
@@ -255,7 +257,7 @@ class RegistrationViewModel(
                     }
                 } catch (e: Exception) {
                     Log.e("RegistrationViewModel", "Unexpected error in register coroutine", e)
-                    _uiState.update { it.copy(error = e.message) }
+                    _uiState.update { it.copy(error = ErrorUtils.sanitizeError(e.message)) }
                 } finally {
                     _uiState.update { it.copy(isLoading = false) }
                 }

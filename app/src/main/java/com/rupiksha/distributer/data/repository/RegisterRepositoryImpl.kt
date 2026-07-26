@@ -7,6 +7,7 @@ import com.rupiksha.distributer.domain.model.PincodeInfo
 import com.rupiksha.distributer.domain.model.RegistrationData
 import com.rupiksha.distributer.domain.model.RetailerEntity
 import com.rupiksha.distributer.domain.repository.RegisterRepository
+import com.rupiksha.distributer.util.ErrorUtils
 import com.rupiksha.distributer.util.Resource
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -39,7 +40,7 @@ class RegisterRepositoryImpl(
                 Resource.Error(response.firstOrNull()?.message ?: "Invalid pincode or API error")
             }
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "An error occurred fetching pincode details")
+            Resource.Error(ErrorUtils.sanitizeError(e.message))
         }
     }
 
@@ -107,8 +108,7 @@ class RegisterRepositoryImpl(
 
             Resource.Success(Unit)
         } catch (e: Exception) {
-            Log.e("RegisterRepo", "Registration error: ${e.message}", e)
-            Resource.Error(e.message ?: "An error occurred during registration")
+            Resource.Error(ErrorUtils.sanitizeError(e.message))
         }
     }
 

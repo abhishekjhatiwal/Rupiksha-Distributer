@@ -23,7 +23,24 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.LockClock
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Numbers
+import androidx.compose.material.icons.filled.LocationCity
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Dialpad
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -89,7 +106,7 @@ fun RegistrationScreen(
     LaunchedEffect(uiState.success) {
         if (uiState.success) {
             showSuccessOverlay = true
-            delay(1300)
+            delay(1300.milliseconds)
             onRegistrationSuccess()
         }
     }
@@ -1581,9 +1598,9 @@ fun SuccessOverlay(visible: Boolean) {
                     animationSpec = infiniteRepeatable(tween(1400, easing = LinearOutSlowInEasing))
                 )
             }
-            delay(150)
+            delay(150.milliseconds)
             titleVisible = true
-            delay(120)
+            delay(120.milliseconds)
             subtitleVisible = true
         }
     }

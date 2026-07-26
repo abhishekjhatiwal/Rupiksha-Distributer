@@ -59,7 +59,7 @@ class AppContainer(private val context: Context) {
         }
         defaultRequest {
             // Remove mock base URL if we are using full URLs in services
-            // url("https://api.example.com/") 
+            // url("https://api.rupiksha.com/")
         }
     }
 

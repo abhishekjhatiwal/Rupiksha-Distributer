@@ -3,6 +3,7 @@ package com.rupiksha.distributer.data.repository
 import android.util.Log
 import com.rupiksha.distributer.data.remote.api.OtpApiService
 import com.rupiksha.distributer.domain.repository.OtpRepository
+import com.rupiksha.distributer.util.ErrorUtils
 import com.rupiksha.distributer.util.Resource
 
 class OtpRepositoryImpl(private val apiService: OtpApiService) : OtpRepository {
@@ -19,7 +20,7 @@ class OtpRepositoryImpl(private val apiService: OtpApiService) : OtpRepository {
             }
         } catch (e: Exception) {
             Log.e("OtpRepository", "Error sending OTP", e)
-            Resource.Error(e.message ?: "An error occurred while sending OTP")
+            Resource.Error(ErrorUtils.sanitizeError(e.message))
         }
     }
 
@@ -32,7 +33,7 @@ class OtpRepositoryImpl(private val apiService: OtpApiService) : OtpRepository {
                 Resource.Error(response.details)
             }
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "An error occurred while verifying OTP")
+            Resource.Error(ErrorUtils.sanitizeError(e.message))
         }
     }
 }

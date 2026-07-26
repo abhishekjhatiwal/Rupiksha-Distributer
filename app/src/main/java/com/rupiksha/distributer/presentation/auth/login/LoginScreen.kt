@@ -722,7 +722,7 @@ fun RoleSegmentedControl(
     selectedRole: Int,
     onRoleSelected: (Int) -> Unit
 ) {
-    val roles = listOf("Sales /\nPromoter", "Partner", "Partner\nEmployee")
+    val roles = listOf("Sales /\nPromoter", "Super \nDistributer", "Distributer", "Partner\nEmployee")
 
     val roleInfiniteTransition = rememberInfiniteTransition(label = "roleBorderAnim")
     val roleShimmer by roleInfiniteTransition.animateFloat(

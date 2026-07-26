@@ -3,16 +3,17 @@ package com.rupiksha.distributer.data.repository
 import com.rupiksha.distributer.data.remote.api.DistributorApiService
 import com.rupiksha.distributer.domain.model.AuthTokens
 import com.rupiksha.distributer.domain.model.DashboardData
-import com.rupiksha.distributer.domain.model.PincodeInfo
 import com.rupiksha.distributer.domain.model.Retailer
 import com.rupiksha.distributer.domain.model.UserProfile
 import com.rupiksha.distributer.domain.repository.DistributorRepository
+import com.rupiksha.distributer.util.ErrorUtils
 import com.rupiksha.distributer.util.Resource
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 class DistributorRepositoryImpl(
     private val apiService: DistributorApiService,
@@ -53,14 +54,14 @@ class DistributorRepositoryImpl(
             if (message.contains("public.app_user_profiles", ignoreCase = true)) {
                 Resource.Error("Username lookup table 'app_user_profiles' is missing. Please run the setup SQL in Supabase or log in using your email address.")
             } else {
-                Resource.Error(message)
+                Resource.Error(ErrorUtils.sanitizeError(message))
             }
         }
     }
 
     override suspend fun getDashboardData(): Resource<DashboardData> {
         return try {
-            delay(1000)
+            delay(1000.milliseconds)
             Resource.Success(
                 DashboardData(
                     totalRetailers = 42,
@@ -69,7 +70,7 @@ class DistributorRepositoryImpl(
                 )
             )
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "An error occurred")
+            Resource.Error(ErrorUtils.sanitizeError(e.message))
         }
     }
 
@@ -83,7 +84,7 @@ class DistributorRepositoryImpl(
                 )
             )
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "An error occurred")
+            Resource.Error(ErrorUtils.sanitizeError(e.message))
         }
     }
 }

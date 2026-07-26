@@ -1,6 +1,7 @@
 package com.rupiksha.distributer.domain.usecase
 
 import com.rupiksha.distributer.domain.model.PincodeInfo
+import com.rupiksha.distributer.domain.model.RegistrationData
 import com.rupiksha.distributer.domain.repository.RegisterRepository
 import com.rupiksha.distributer.util.Resource
 import kotlinx.coroutines.runBlocking
@@ -14,6 +15,10 @@ class GetPincodeDetailsUseCaseTest {
         var pincodeResult: Resource<PincodeInfo> = Resource.Error("Not initialized")
         
         override suspend fun getPincodeDetails(pincode: String): Resource<PincodeInfo> = pincodeResult
+
+        override suspend fun registerRetailer(data: RegistrationData): Resource<Unit> {
+            return Resource.Error("Not implemented")
+        }
     }
     
     private val useCase = GetPincodeDetailsUseCase(repository)
