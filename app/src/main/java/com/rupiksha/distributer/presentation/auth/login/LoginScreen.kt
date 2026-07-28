@@ -63,18 +63,16 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import com.rupiksha.distributer.R
-import com.rupiksha.distributer.di.AppContainer
 import com.rupiksha.distributer.ui.theme.*
 
 @Composable
 fun LoginScreen(
-    appContainer: AppContainer,
     onLoginSuccess: () -> Unit,
     onRegisterClick: () -> Unit
 ) {
-    val viewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory(appContainer))
+    val viewModel: LoginViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
     LoginContent(

@@ -14,7 +14,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.rupiksha.distributer.di.AppContainer
 import com.rupiksha.distributer.presentation.auth.login.LoginScreen
 import com.rupiksha.distributer.presentation.auth.register.RegistrationScreen
 import com.rupiksha.distributer.presentation.dashboard.DashboardScreen
@@ -25,8 +24,7 @@ private val transitionEasing = FastOutSlowInEasing
 @Composable
 fun AppNavGraph(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
-    appContainer: AppContainer
+    navController: NavHostController = rememberNavController()
 ) {
     NavHost(
         navController = navController,
@@ -67,7 +65,6 @@ fun AppNavGraph(
             }
         ) {
             LoginScreen(
-                appContainer = appContainer,
                 onLoginSuccess = {
                     navController.navigate(Screen.Dashboard.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
@@ -84,23 +81,37 @@ fun AppNavGraph(
                 // Pushed in from Login: slide in from the right, like moving forward in a flow.
                 slideInHorizontally(
                     animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing)
-                ) { fullWidth -> fullWidth } + fadeIn(tween(TRANSITION_DURATION, easing = transitionEasing))
+                ) { fullWidth -> fullWidth } + fadeIn(
+                    tween(
+                        TRANSITION_DURATION,
+                        easing = transitionEasing
+                    )
+                )
             },
             exitTransition = {
                 // Registration success navigates forward to Login: slide out to the left.
                 slideOutHorizontally(
                     animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing)
-                ) { fullWidth -> -fullWidth / 3 } + fadeOut(tween(TRANSITION_DURATION, easing = transitionEasing))
+                ) { fullWidth -> -fullWidth / 3 } + fadeOut(
+                    tween(
+                        TRANSITION_DURATION,
+                        easing = transitionEasing
+                    )
+                )
             },
             popExitTransition = {
                 // User taps back: slide back out to the right, matching the forward entry direction.
                 slideOutHorizontally(
                     animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing)
-                ) { fullWidth -> fullWidth } + fadeOut(tween(TRANSITION_DURATION, easing = transitionEasing))
+                ) { fullWidth -> fullWidth } + fadeOut(
+                    tween(
+                        TRANSITION_DURATION,
+                        easing = transitionEasing
+                    )
+                )
             }
         ) {
             RegistrationScreen(
-                appContainer = appContainer,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
@@ -126,7 +137,6 @@ fun AppNavGraph(
             }
         ) {
             DashboardScreen(
-                appContainer = appContainer,
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Dashboard.route) { inclusive = true }

@@ -63,12 +63,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.rupiksha.distributer.di.AppContainer
 import com.rupiksha.distributer.presentation.auth.login.CustomOutlinedTextField
 import com.rupiksha.distributer.ui.theme.*
 import com.rupiksha.distributer.util.ImageUtils
@@ -93,12 +92,10 @@ private val stepSubtitles = listOf(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun RegistrationScreen(
-    appContainer: AppContainer,
     onNavigateBack: () -> Unit,
     onRegistrationSuccess: () -> Unit
 ) {
-    val viewModel: RegistrationViewModel =
-        viewModel(factory = RegistrationViewModelFactory(appContainer))
+    val viewModel: RegistrationViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
     var showSuccessOverlay by remember { mutableStateOf(false) }

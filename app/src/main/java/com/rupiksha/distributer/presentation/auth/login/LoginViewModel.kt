@@ -1,9 +1,7 @@
 package com.rupiksha.distributer.presentation.auth.login
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.rupiksha.distributer.di.AppContainer
 import com.rupiksha.distributer.domain.usecase.LoginUseCase
 import com.rupiksha.distributer.util.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,15 +31,5 @@ class LoginViewModel(private val loginUseCase: LoginUseCase) : ViewModel() {
                 is Resource.Loading -> {}
             }
         }
-    }
-}
-
-class LoginViewModelFactory(private val container: AppContainer) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
-            return LoginViewModel(LoginUseCase(container.repository)) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

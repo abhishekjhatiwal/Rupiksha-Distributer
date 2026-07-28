@@ -119,6 +119,11 @@ dependencies {
 
     implementation(libs.play.services.location)
     // implementation(libs.retrofit)
+
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.androidx.core)
     testImplementation(libs.androidx.junit)

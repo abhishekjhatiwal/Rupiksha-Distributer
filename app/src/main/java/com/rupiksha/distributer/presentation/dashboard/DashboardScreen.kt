@@ -24,18 +24,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 import com.rupiksha.distributer.R
-import com.rupiksha.distributer.di.AppContainer
 import com.rupiksha.distributer.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    appContainer: AppContainer,
     onLogout: () -> Unit
 ) {
-    val viewModel: DashboardViewModel = viewModel(factory = DashboardViewModelFactory(appContainer))
+    val viewModel: DashboardViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
     var selectedTabIndex by remember { mutableStateOf(0) }

@@ -2,10 +2,9 @@ package com.rupiksha.distributer.presentation.auth.register
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.rupiksha.distributer.di.AppContainer
 import com.rupiksha.distributer.domain.model.RegistrationData
+import com.rupiksha.distributer.domain.repository.RegisterRepository
 import com.rupiksha.distributer.domain.usecase.GetPincodeDetailsUseCase
 import com.rupiksha.distributer.domain.usecase.SendOtpUseCase
 import com.rupiksha.distributer.domain.usecase.VerifyOtpUseCase
@@ -37,7 +36,7 @@ data class RegistrationUiState(
 )
 
 class RegistrationViewModel(
-    private val appContainer: AppContainer,
+    private val registerRepository: RegisterRepository,
     private val getPincodeDetailsUseCase: GetPincodeDetailsUseCase,
     private val sendOtpUseCase: SendOtpUseCase,
     private val verifyOtpUseCase: VerifyOtpUseCase
@@ -51,7 +50,7 @@ class RegistrationViewModel(
 
     fun fetchLocationDetails(pincode: String) {
         if (pincode.length != 6) return
-        
+
         pincodeJob?.cancel()
         pincodeJob = viewModelScope.launch {
             _uiState.update { it.copy(isPincodeLoading = true) }
@@ -69,9 +68,11 @@ class RegistrationViewModel(
                         )
                     }
                 }
+
                 is Resource.Error -> {
                     // Optionally clear or show error
                 }
+
                 else -> {}
             }
             _uiState.update { it.copy(isPincodeLoading = false) }
@@ -115,12 +116,20 @@ class RegistrationViewModel(
             _uiState.update { it.copy(isOtpSending = true, error = null) }
             when (val result = sendOtpUseCase(mobile)) {
                 is Resource.Success -> {
-                    _uiState.update { it.copy(isOtpSent = true, otpSessionId = result.data, otpTimer = 60) }
+                    _uiState.update {
+                        it.copy(
+                            isOtpSent = true,
+                            otpSessionId = result.data,
+                            otpTimer = 60
+                        )
+                    }
                     startTimer()
                 }
+
                 is Resource.Error -> {
                     _uiState.update { it.copy(error = result.message) }
                 }
+
                 else -> {}
             }
             _uiState.update { it.copy(isOtpSending = false) }
@@ -152,13 +161,16 @@ class RegistrationViewModel(
                             data = state.data.copy(isMobileVerified = true),
                             isOtpSent = false,
                             otpInput = "",
-                            fieldErrors = state.fieldErrors.toMutableMap().apply { remove("mobile") }
+                            fieldErrors = state.fieldErrors.toMutableMap()
+                                .apply { remove("mobile") }
                         )
                     }
                 }
+
                 is Resource.Error -> {
                     _uiState.update { it.copy(error = result.message) }
                 }
+
                 else -> {}
             }
             _uiState.update { it.copy(isOtpVerifying = false) }
@@ -188,13 +200,14 @@ class RegistrationViewModel(
                 if (data.name.isBlank()) errors["name"] = "Name is required"
                 if (data.mobile.length != 10) errors["mobile"] = "Mobile number must be 10 digits"
                 else if (!data.isMobileVerified) errors["mobile"] = "Please verify your mobile number"
-                
+
                 if (data.email.isBlank()) {
                     errors["email"] = "Email is required"
                 } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(data.email).matches()) {
                     errors["email"] = "Enter a valid email address"
                 }
             }
+
             2 -> {
                 if (data.shopName.isBlank()) errors["shopName"] = "Shop name is required"
                 if (data.shopAddress.isBlank()) errors["shopAddress"] = "Shop address is required"
@@ -203,12 +216,15 @@ class RegistrationViewModel(
                 if (data.district.isBlank()) errors["district"] = "District is required"
                 if (data.state.isBlank()) errors["state"] = "State is required"
             }
+
             3 -> {
-                if (data.adharNumber.length != 12) errors["adharNumber"] = "Adhar number must be 12 digits"
+                if (data.adharNumber.length != 12) errors["adharNumber"] =
+                    "Adhar number must be 12 digits"
                 if (!data.panNumber.matches(Regex("[A-Z]{5}[0-9]{4}[A-Z]"))) {
                     errors["panNumber"] = "Enter a valid PAN number (ABCDE1234F)"
                 }
             }
+
             4 -> {
                 if (data.adharFrontUri == null) errors["adharFront"] = "Aadhaar Front required"
                 if (data.adharBackUri == null) errors["adharBack"] = "Aadhaar Back required"
@@ -217,11 +233,14 @@ class RegistrationViewModel(
                 if (data.photoWithEmployeeUri == null) errors["photoEmployee"] = "Photo required"
                 if (data.shopPhotoUri == null) errors["shopPhoto"] = "Shop Photo required"
             }
+
             5 -> {
                 // Password: 8-15 characters, numbers + letters + special chars
-                val passwordRegex = Regex("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,15}$")
+                val passwordRegex =
+                    Regex("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,15}$")
                 if (!data.password.matches(passwordRegex)) {
-                    errors["password"] = "Password: 8-15 chars with number, upper/lower case & special char"
+                    errors["password"] =
+                        "Password: 8-15 chars with number, upper/lower case & special char"
                 }
                 if (data.password != data.confirmPassword) {
                     errors["confirmPassword"] = "Passwords do not match"
@@ -244,15 +263,17 @@ class RegistrationViewModel(
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
                 try {
-                    val result = appContainer.registerRepository.registerRetailer(_uiState.value.data)
+                    val result = registerRepository.registerRetailer(_uiState.value.data)
                     Log.d("RegistrationViewModel", "Registration result: $result")
                     when (result) {
                         is Resource.Success -> {
                             _uiState.update { it.copy(success = true) }
                         }
+
                         is Resource.Error -> {
                             _uiState.update { it.copy(error = result.message) }
                         }
+
                         else -> {}
                     }
                 } catch (e: Exception) {
@@ -263,22 +284,10 @@ class RegistrationViewModel(
                 }
             }
         } else {
-            Log.w("RegistrationViewModel", "Validation failed for step 5: ${_uiState.value.fieldErrors}")
+            Log.w(
+                "RegistrationViewModel",
+                "Validation failed for step 5: ${_uiState.value.fieldErrors}"
+            )
         }
-    }
-}
-
-class RegistrationViewModelFactory(private val appContainer: AppContainer) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(RegistrationViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return RegistrationViewModel(
-                appContainer = appContainer,
-                getPincodeDetailsUseCase = appContainer.getPincodeDetailsUseCase,
-                sendOtpUseCase = appContainer.sendOtpUseCase,
-                verifyOtpUseCase = appContainer.verifyOtpUseCase
-            ) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
