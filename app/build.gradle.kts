@@ -8,16 +8,17 @@ plugins {
     alias(libs.plugins.secrets)
     alias(libs.plugins.google.services)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.hilt)
 }
 
 android {
     namespace = "com.rupiksha.distributer"
-    compileSdk { version = release(36) { minorApiLevel = 1 } }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.rupiksha.distributer"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -120,9 +121,10 @@ dependencies {
     implementation(libs.play.services.location)
     // implementation(libs.retrofit)
 
-    // Koin
-    implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
+    // Hilt
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
+    ksp(libs.hilt.compiler)
 
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.androidx.core)

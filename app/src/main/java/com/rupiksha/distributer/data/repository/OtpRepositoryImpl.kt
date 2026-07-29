@@ -5,8 +5,9 @@ import com.rupiksha.distributer.data.remote.api.OtpApiService
 import com.rupiksha.distributer.domain.repository.OtpRepository
 import com.rupiksha.distributer.util.ErrorUtils
 import com.rupiksha.distributer.util.Resource
+import javax.inject.Inject
 
-class OtpRepositoryImpl(private val apiService: OtpApiService) : OtpRepository {
+class OtpRepositoryImpl @Inject constructor(private val apiService: OtpApiService) : OtpRepository {
     
     override suspend fun sendOtp(phoneNumber: String): Resource<String> {
         return try {

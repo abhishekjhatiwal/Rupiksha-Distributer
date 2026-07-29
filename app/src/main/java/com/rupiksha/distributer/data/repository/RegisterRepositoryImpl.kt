@@ -14,11 +14,13 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-class RegisterRepositoryImpl(
+class RegisterRepositoryImpl @Inject constructor(
     private val apiService: DistributorApiService,
     private val supabase: SupabaseClient,
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) : RegisterRepository {
 
     override suspend fun getPincodeDetails(pincode: String): Resource<PincodeInfo> {

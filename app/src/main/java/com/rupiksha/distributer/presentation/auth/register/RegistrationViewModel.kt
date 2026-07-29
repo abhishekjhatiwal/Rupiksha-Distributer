@@ -10,6 +10,7 @@ import com.rupiksha.distributer.domain.usecase.SendOtpUseCase
 import com.rupiksha.distributer.domain.usecase.VerifyOtpUseCase
 import com.rupiksha.distributer.util.ErrorUtils
 import com.rupiksha.distributer.util.Resource
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
 data class RegistrationUiState(
@@ -35,7 +37,8 @@ data class RegistrationUiState(
     val otpTimer: Int = 0
 )
 
-class RegistrationViewModel(
+@HiltViewModel
+class RegistrationViewModel @Inject constructor(
     private val registerRepository: RegisterRepository,
     private val getPincodeDetailsUseCase: GetPincodeDetailsUseCase,
     private val sendOtpUseCase: SendOtpUseCase,

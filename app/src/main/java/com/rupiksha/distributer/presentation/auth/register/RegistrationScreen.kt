@@ -63,7 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
-import org.koin.androidx.compose.koinViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -95,7 +95,7 @@ fun RegistrationScreen(
     onNavigateBack: () -> Unit,
     onRegistrationSuccess: () -> Unit
 ) {
-    val viewModel: RegistrationViewModel = koinViewModel()
+    val viewModel: RegistrationViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
     var showSuccessOverlay by remember { mutableStateOf(false) }

@@ -13,9 +13,10 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.delay
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
-class DistributorRepositoryImpl(
+class DistributorRepositoryImpl @Inject constructor(
     private val apiService: DistributorApiService,
     private val supabase: SupabaseClient
 ) : DistributorRepository {

@@ -63,7 +63,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.koin.androidx.compose.koinViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.rupiksha.distributer.R
 import com.rupiksha.distributer.ui.theme.*
 
@@ -72,7 +72,7 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onRegisterClick: () -> Unit
 ) {
-    val viewModel: LoginViewModel = koinViewModel()
+    val viewModel: LoginViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
     LoginContent(

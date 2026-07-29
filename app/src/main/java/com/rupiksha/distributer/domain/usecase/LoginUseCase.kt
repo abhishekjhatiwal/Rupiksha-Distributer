@@ -3,8 +3,9 @@ package com.rupiksha.distributer.domain.usecase
 import com.rupiksha.distributer.domain.model.AuthTokens
 import com.rupiksha.distributer.domain.repository.DistributorRepository
 import com.rupiksha.distributer.util.Resource
+import javax.inject.Inject
 
-class LoginUseCase(
+class LoginUseCase @Inject constructor(
     private val repository: DistributorRepository
 ) {
     suspend operator fun invoke(username: String, pin: String): Resource<AuthTokens> {

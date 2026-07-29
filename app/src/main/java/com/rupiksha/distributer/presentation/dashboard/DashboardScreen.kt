@@ -24,7 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.koin.androidx.compose.koinViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.rupiksha.distributer.R
 import com.rupiksha.distributer.ui.theme.*
 
@@ -33,7 +33,7 @@ import com.rupiksha.distributer.ui.theme.*
 fun DashboardScreen(
     onLogout: () -> Unit
 ) {
-    val viewModel: DashboardViewModel = koinViewModel()
+    val viewModel: DashboardViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
     var selectedTabIndex by remember { mutableStateOf(0) }

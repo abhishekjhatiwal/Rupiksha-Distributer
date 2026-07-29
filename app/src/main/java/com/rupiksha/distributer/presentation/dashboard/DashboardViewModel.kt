@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.rupiksha.distributer.domain.model.DashboardData
 import com.rupiksha.distributer.domain.repository.DistributorRepository
 import com.rupiksha.distributer.util.Resource
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class DashboardUiState(
     val isLoading: Boolean = false,
@@ -15,7 +17,8 @@ data class DashboardUiState(
     val error: String? = null
 )
 
-class DashboardViewModel(private val repository: DistributorRepository) : ViewModel() {
+@HiltViewModel
+class DashboardViewModel @Inject constructor(private val repository: DistributorRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState
     init { loadDashboard() }
